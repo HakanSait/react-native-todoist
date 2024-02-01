@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Image, ScrollView, TouchableOpacity, TextInput, StyleSheet, Dimensions } from 'react-native';
+import { View, Image, TouchableOpacity, TextInput, FlatList, StyleSheet, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Header, Task } from './components';
@@ -10,38 +10,39 @@ function App(): React.JSX.Element {
     const [newTask, setNewTask] = useState('');
 
 
-    const addNewTask = async (NewTask: string): Promise<boolean> => {
+    const addNewTask = async (NewTask: string): Promise<void> => {
         if (!NewTask) {
-            return false;
+            return;
         }
 
         const Tasks: object[] = JSON.parse(await AsyncStorage.getItem('tasks') as string);
         Tasks.push({
-            definition: NewTask
+            definition: NewTask,
+            isDone: false
         });
 
         await AsyncStorage.setItem('tasks', JSON.stringify(Tasks));
 
         setNewTask('');
 
-        return true;
+        return;
     }
 
 
     useEffect(() => {
-        const initializeTasks = async (): Promise<void> => {
+        const onRender = async (): Promise<void> => {
             const Tasks = JSON.parse(await AsyncStorage.getItem('tasks') as string);
 
             if (!Tasks) {
                 await AsyncStorage.setItem('tasks', JSON.stringify([]));
 
-                initializeTasks();
+                onRender();
             } else {
                 setTasks(Tasks);
             }
         }
 
-        initializeTasks();
+        onRender();
     });
 
 
@@ -49,25 +50,21 @@ function App(): React.JSX.Element {
         <View style={styles.container}>
             <Header
                 name='Tasks'
-                bgColor='#000'
+                bgColor='#080808'
                 textColor='#0d8294'
             />
 
-            <ScrollView>
-                <View style={styles.tasks}>
-                    {
-                        tasks.map((item, index) => {
-                            return (
-                                <Task
-                                    task={item}
-                                    index={index}
-                                    key={index}
-                                />
-                            );
-                        })
-                    }
-                </View>
-            </ScrollView>
+            <FlatList
+                contentContainerStyle={styles.tasks}
+                data={tasks}
+                renderItem={({ item, index }) => (
+                    <Task
+                        task={item}
+                        index={index}
+                        key={index}
+                    />
+                )}
+            />
 
             <View style={styles.newTask}>
                 <TextInput
@@ -98,7 +95,7 @@ const vw: number = Dimensions.get('window').width / 100;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#000'
+        backgroundColor: '#080808'
     },
 
     tasks: {
@@ -119,14 +116,14 @@ const styles = StyleSheet.create({
         paddingVertical: 30,
         paddingHorizontal: 15,
 
-        backgroundColor: '#000'
+        backgroundColor: '#080808'
     },
 
     inputTask: {
         fontSize: 20,
         width: 62.5 * vw,
 
-        color: '#f6f6f6',
+        color: '#f3f3f3',
 
         paddingVertical: 10,
         paddingLeft: 10,

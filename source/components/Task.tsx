@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text, View, Dimensions, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import CheckBox from '@react-native-community/checkbox';
 
+
+type Task = {
+    definition: string,
+    isDone: boolean
+}
 
 type Props = {
-    task: { definition: string },
+    task: Task,
     index: number
 }
 
@@ -13,8 +19,17 @@ function Task(props: Props): React.JSX.Element {
 
 
     const deleteTask = async (): Promise<void> => {
-        const Tasks: object[] = JSON.parse(await AsyncStorage.getItem('tasks') as string);
+        const Tasks: Task[] = JSON.parse(await AsyncStorage.getItem('tasks') as string);
         Tasks.splice(props.index, 1);
+
+        await AsyncStorage.setItem('tasks', JSON.stringify(Tasks));
+
+        renderApp(!app);
+    }
+
+    const checkboxHandler = async (): Promise<void> => {
+        const Tasks: Task[] = JSON.parse(await AsyncStorage.getItem('tasks') as string);
+        Tasks[props.index].isDone = !Tasks[props.index].isDone;
 
         await AsyncStorage.setItem('tasks', JSON.stringify(Tasks));
 
@@ -24,15 +39,19 @@ function Task(props: Props): React.JSX.Element {
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity onPress={() => deleteTask()} style={styles.removeButton}>
-                <Image source={require('../images/remove.png')} style={styles.removeImage}/>
+            <TouchableOpacity style={styles.removeButton} onPress={() => deleteTask()}>
+                <Image style={styles.removeImage} source={require('../images/remove.png')} />
             </TouchableOpacity>
 
-            <Text style={styles.taskText}>
+            <Text style={props.task.isDone ? [styles.taskText, styles.lineThrough] : styles.taskText}>
                 {props.task.definition}
             </Text>
 
-            { /* TODO: Prepare checkbox */}
+            <CheckBox
+                style={styles.checkbox}
+                value={props.task.isDone}
+                onValueChange={() => checkboxHandler()}
+            />
         </View>
     );
 }
@@ -54,7 +73,7 @@ const styles = StyleSheet.create({
     },
 
     removeButton: {
-        margin: (100 * vw) / 15
+        margin: (100 * vw) / 20
     },
 
     removeImage: {
@@ -63,9 +82,20 @@ const styles = StyleSheet.create({
     },
 
     taskText: {
-        color: '#f6f6f6',
-        marginVertical: 10,
-        marginRight: 150
+        flex: 1,
+
+        fontSize: 20,
+        color: '#f3f3f3',
+
+        paddingVertical: 15,
+    },
+
+    checkbox: {
+        margin: (100 * vw) / 22.5,
+    },
+
+    lineThrough: {
+        textDecorationLine: 'line-through'
     }
 });
 
