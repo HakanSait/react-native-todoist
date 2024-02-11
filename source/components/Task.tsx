@@ -91,6 +91,9 @@ const styles = StyleSheet.create({
     },
 
     checkbox: {
+        width: 5 * vw,
+        height: 5 * vw,
+
         margin: (100 * vw) / 22.5,
     },
 
